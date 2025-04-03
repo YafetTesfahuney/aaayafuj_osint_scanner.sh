@@ -8,79 +8,52 @@ fi
 
 TARGET="$1"
 
-# Set terminal title
-echo -ne "\033]0;aaayafuj OSINT Scanner\007"
+# Dependencies check
+for cmd in nmap curl jq dig host whois traceroute; do
+    if ! command -v $cmd &> /dev/null; then
+        echo "[ERROR] Missing dependency: $cmd"
+        exit 1
+    fi
+done
 
-# Cool startup banner
 clear
 echo "=========================================="
-echo "🔥 Welcome to aaayafuj OSINT Scanner 🔥"
+echo "🔍 aaayafuj OSINT Scanner"
 echo "=========================================="
-echo "🚀 Gathering intelligence on: $TARGET"
+echo "[+] Target: $TARGET"
 echo ""
 
-# Function to simulate typing effect
-type_command() {
-    CMD="$1"
-    echo -n "[root@hacker ~]# "
-    for ((i = 0; i < ${#CMD}; i++)); do
-        echo -n "${CMD:$i:1}"
-        sleep 0.04
-    done
+# Function to run and display command output
+run_cmd() {
+    echo "----------------------------------------"
+    echo "[+] $1"
+    echo "----------------------------------------"
+    eval "$2"
     echo ""
-    eval "$CMD" 2>/dev/null
-    sleep 2
 }
 
-# 1️⃣ Basic Info Gathering
-echo "[+] Running Whois Lookup..."
-type_command "whois $TARGET"
-
-echo "[+] Running DNS Lookup..."
-type_command "nslookup $TARGET"
-
-echo "[+] Running Reverse DNS Lookup..."
-type_command "host $TARGET"
+# 1️⃣ Basic Information Gathering
+run_cmd "Whois Lookup" "whois $TARGET"
+run_cmd "DNS Lookup" "dig ANY +short $TARGET"
+run_cmd "Reverse DNS Lookup" "host $TARGET"
 
 # 2️⃣ Geolocation Data
-echo "[+] Fetching GPS Coordinates and ISP Information..."
-type_command "curl -s http://ip-api.com/json/$TARGET | jq"
+run_cmd "Geolocation and ISP Info" "curl -s http://ip-api.com/json/$TARGET | jq"
 
-# 3️⃣ Real Nmap Scans
-echo "[+] Running Basic Nmap Scan..."
-type_command "nmap -sV -T4 $TARGET"
-
-echo "[+] Running Aggressive Nmap Scan..."
-type_command "nmap -A -T4 $TARGET"
-
-echo "[+] Scanning Specific Ports..."
-type_command "nmap -p 21,22,80,443,3306 $TARGET"
-
-echo "[+] Running Vulnerability Scan..."
-type_command "nmap --script vuln $TARGET"
+# 3️⃣ Nmap Scans
+run_cmd "Basic Nmap Scan" "nmap -sV -T4 $TARGET"
+run_cmd "Aggressive Nmap Scan" "nmap -A -T4 $TARGET"
+run_cmd "Specific Port Scan (21, 22, 80, 443, 3306)" "nmap -p 21,22,80,443,3306 $TARGET"
+run_cmd "Vulnerability Scan" "nmap --script vuln $TARGET"
 
 # 4️⃣ Passive OSINT Lookups
-echo "[+] Fetching data from HackerTarget API..."
-type_command "curl -s https://api.hackertarget.com/whois/?q=$TARGET"
+run_cmd "Threat Intelligence (AbuseIPDB)" "curl -s https://api.abuseipdb.com/api/v2/check?ipAddress=$TARGET"
+run_cmd "Threat Intelligence (AlienVault OTX)" "curl -s https://otx.alienvault.com/api/v1/indicators/IPv4/$TARGET"
 
-echo "[+] Checking for open-source threat intelligence..."
-type_command "curl -s https://api.abuseipdb.com/api/v2/check?ipAddress=$TARGET"
+# 5️⃣ Network Trace
+run_cmd "Traceroute" "traceroute $TARGET"
 
-echo "[+] Fetching threat intelligence from AlienVault OTX..."
-type_command "curl -s https://otx.alienvault.com/api/v1/indicators/IPv4/$TARGET"
-
-# 5️⃣ Trace the Route
-echo "[+] Running Traceroute..."
-type_command "traceroute $TARGET"
-
-# 6️⃣ Display Complete Results
-echo "🚀 Scan Complete! Here are your findings:"
-echo "----------------------------------------"
-echo "✔ Whois, Geolocation, and ASN data"
-echo "✔ DNS and Reverse DNS records"
-echo "✔ Nmap scans (Aggressive, Ports, Vulnerability check)"
-echo "✔ Open-source intelligence from security APIs"
-echo "----------------------------------------"
-echo "💀 Mission Accomplished. Stay Anonymous! 💀"
-
+echo "=========================================="
+echo "✅ Scan Complete!"
+echo "=========================================="
 exit 0
