@@ -59,7 +59,7 @@ Uses curl to query ip-api.com, which provides geolocation data.
 
 How?
 
-Uses nmap with different options:
+. Uses nmap with different options:
 
 * -sV for service detection.
 * -A for aggressive mode.
