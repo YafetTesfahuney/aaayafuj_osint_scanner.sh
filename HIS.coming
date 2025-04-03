@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Check if user provided an IP or domain
+if [ -z "$1" ]; then
+    echo "Usage: $0 <IP-ADDRESS or DOMAIN>"
+    exit 1
+fi
+
+TARGET="$1"
+
+# Set terminal title
+echo -ne "\033]0;aaayafuj OSINT Scanner\007"
+
+# Cool startup banner
+clear
+echo "=========================================="
+echo "🔥 Welcome to aaayafuj OSINT Scanner 🔥"
+echo "=========================================="
+echo "🚀 Gathering intelligence on: $TARGET"
+echo ""
+
+# Function to simulate typing effect
+type_command() {
+    CMD="$1"
+    echo -n "[root@hacker ~]# "
+    for ((i = 0; i < ${#CMD}; i++)); do
+        echo -n "${CMD:$i:1}"
+        sleep 0.04
+    done
+    echo ""
+    eval "$CMD" 2>/dev/null
+    sleep 2
+}
+
+# 1️⃣ Basic Info Gathering
+echo "[+] Running Whois Lookup..."
+type_command "whois $TARGET"
+
+echo "[+] Running DNS Lookup..."
+type_command "nslookup $TARGET"
+
+echo "[+] Running Reverse DNS Lookup..."
+type_command "host $TARGET"
+
+# 2️⃣ Geolocation Data
+echo "[+] Fetching GPS Coordinates and ISP Information..."
+type_command "curl -s http://ip-api.com/json/$TARGET | jq"
+
+# 3️⃣ Real Nmap Scans
+echo "[+] Running Basic Nmap Scan..."
+type_command "nmap -sV -T4 $TARGET"
+
+echo "[+] Running Aggressive Nmap Scan..."
+type_command "nmap -A -T4 $TARGET"
+
+echo "[+] Scanning Specific Ports..."
+type_command "nmap -p 21,22,80,443,3306 $TARGET"
+
+echo "[+] Running Vulnerability Scan..."
+type_command "nmap --script vuln $TARGET"
+
+# 4️⃣ Passive OSINT Lookups
+echo "[+] Fetching data from HackerTarget API..."
+type_command "curl -s https://api.hackertarget.com/whois/?q=$TARGET"
+
+echo "[+] Checking for open-source threat intelligence..."
+type_command "curl -s https://api.abuseipdb.com/api/v2/check?ipAddress=$TARGET"
+
+echo "[+] Fetching threat intelligence from AlienVault OTX..."
+type_command "curl -s https://otx.alienvault.com/api/v1/indicators/IPv4/$TARGET"
+
+# 5️⃣ Trace the Route
+echo "[+] Running Traceroute..."
+type_command "traceroute $TARGET"
+
+# 6️⃣ Display Complete Results
+echo "🚀 Scan Complete! Here are your findings:"
+echo "----------------------------------------"
+echo "✔ Whois, Geolocation, and ASN data"
+echo "✔ DNS and Reverse DNS records"
+echo "✔ Nmap scans (Aggressive, Ports, Vulnerability check)"
+echo "✔ Open-source intelligence from security APIs"
+echo "----------------------------------------"
+echo "💀 Mission Accomplished. Stay Anonymous! 💀"
+
+exit 0
